@@ -10,14 +10,12 @@ if not DATABASE_URL:
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# Add SSL for Supabase pooler
-if "?" in DATABASE_URL:
-    DATABASE_URL += "&sslmode=require"
-else:
-    DATABASE_URL += "?sslmode=require"
+# Strip any existing query params to avoid conflicts
+base_url = DATABASE_URL.split("?")[0]
 
 engine = create_engine(
-    DATABASE_URL,
+    base_url,
+    connect_args={"sslmode": "require"},  # SSL via connect_args, not URL
     pool_pre_ping=True,
     pool_recycle=300,
     pool_size=5,
