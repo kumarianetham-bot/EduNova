@@ -10,14 +10,18 @@ if not DATABASE_URL:
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# Required for Supabase connection pooler
-if "pooler.supabase.com" in DATABASE_URL and "pgbouncer" not in DATABASE_URL:
-    DATABASE_URL += "?pgbouncer=true"
+# Add SSL for Supabase pooler
+if "?" in DATABASE_URL:
+    DATABASE_URL += "&sslmode=require"
+else:
+    DATABASE_URL += "?sslmode=require"
 
 engine = create_engine(
     DATABASE_URL,
-    pool_pre_ping=True,        # detect dropped connections
-    pool_recycle=300,          # recycle connections every 5 mins
+    pool_pre_ping=True,
+    pool_recycle=300,
+    pool_size=5,
+    max_overflow=10,
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
